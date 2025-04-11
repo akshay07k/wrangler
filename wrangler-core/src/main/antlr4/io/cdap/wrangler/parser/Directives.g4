@@ -140,8 +140,17 @@ numberRange
  ;
 
 value
- : String | Number | Column | Bool
+ : String | Number | Column | Bool | BYTE_SIZE | TIME_DURATION
  ;
+
+byteSizeArg
+ : BYTE_SIZE
+ ;
+
+timeDurationArg
+ : TIME_DURATION
+ ;
+
 
 ecommand
  : '!' Identifier
@@ -248,6 +257,14 @@ Dollar   : '$';
 Tilde    : '~';
 
 
+BYTE_SIZE
+ : Digit+ ('.' Digit+)? BYTE_UNIT
+ ;
+
+TIME_DURATION
+ : Digit+ ('.' Digit+)? TIME_UNIT
+ ;
+
 Bool
  : 'true'
  | 'false'
@@ -279,6 +296,24 @@ EscapeSequence
    |   UnicodeEscape
    |   OctalEscape
    ;
+
+
+fragment BYTE_UNIT
+  : 'kb' | 'KB'
+  | 'mb' | 'MB'
+  | 'gb' | 'GB'
+  | 'tb' | 'TB'
+  | 'pb' | 'PB'
+  | 'b'  | 'B'
+  ;
+
+fragment TIME_UNIT
+  : 'ms' | 'MS'
+  | 's'  | 'S'  | 'sec' | 'SEC'
+  | 'm'  | 'M'  | 'min' | 'MIN'
+  | 'h'  | 'H'  | 'hr'  | 'HR'
+  | 'd'  | 'D'  | 'day' | 'DAY'
+  ;
 
 fragment
 OctalEscape

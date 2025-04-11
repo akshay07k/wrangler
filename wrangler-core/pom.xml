@@ -105,6 +105,24 @@
       <version>2.0.2</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.8.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>5.8.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cdap.wrangler</groupId>
+      <artifactId>wrangler-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
 
     <!-- External -->
 
@@ -324,16 +342,20 @@
         <groupId>org.antlr</groupId>
         <artifactId>antlr4-maven-plugin</artifactId>
         <version>${antlr4-maven-plugin.version}</version>
-        <configuration>
-          <visitor>true</visitor>
-        </configuration>
         <executions>
           <execution>
+            <id>antlr</id>
             <goals>
               <goal>antlr4</goal>
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <sourceDirectory>${project.basedir}/src/main/antlr4</sourceDirectory>
+          <outputDirectory>${project.build.directory}/generated-sources/antlr4</outputDirectory>
+          <listener>true</listener>
+          <visitor>true</visitor>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>

@@ -43,6 +43,10 @@ import java.io.Serializable;
  */
 @PublicEvolving
 public enum TokenType implements Serializable {
+
+  BYTE_SIZE,
+  TIME_DURATION,
+  
   /**
    * Represents the enumerated type for the object {@code DirectiveName} type.
    * This type is associated with the token that is recognized as a directive
@@ -152,5 +156,6 @@ public enum TokenType implements Serializable {
    * Represents the enumerated type for the object of type {@code String} with restrictions
    * on characters that can be present in a string.
    */
-  IDENTIFIER
+  IDENTIFIER,
+
 }
