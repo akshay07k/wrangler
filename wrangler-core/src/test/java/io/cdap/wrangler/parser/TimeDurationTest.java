@@ -14,11 +14,11 @@
  * the License.
  */
 
- package io.cdap.wrangler.parser;
+package io.cdap.wrangler.parser;
 
 import io.cdap.wrangler.api.parser.TimeDuration;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class TimeDurationTest {
 

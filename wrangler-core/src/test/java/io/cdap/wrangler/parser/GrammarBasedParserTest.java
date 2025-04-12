@@ -37,7 +37,9 @@ public class GrammarBasedParserTest {
   public void testAggregateSizeTimeParsing() throws Exception {
     RecipeCompiler compiler = new RecipeCompiler();
     CompileStatus status = compiler.compile(
-        "aggregate-size-time inputSizeCol input_time outputSizeCol output_time sizeUnit MB timeUnit seconds aggregationType average");
+        "aggregate-size-time inputSizeCol input_time outputSizeCol output_time " +
+        "sizeUnit MB timeUnit seconds aggregationType average"
+    );
     assertNotNull(status);
   }
 

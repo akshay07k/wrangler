@@ -14,17 +14,32 @@
  * the License.
  */
 
- package io.cdap.directives.aggregates;
+package io.cdap.directives.aggregates;
 
-import io.cdap.wrangler.api.*;
-import io.cdap.wrangler.api.parser.*;
-
+import io.cdap.wrangler.api.Directive;
+import io.cdap.wrangler.api.DirectiveExecutionException;
+import io.cdap.wrangler.api.DirectiveParseException;
+import io.cdap.wrangler.api.ExecutorContext;
+import io.cdap.wrangler.api.Optional;
+import io.cdap.wrangler.api.Row;
+import io.cdap.wrangler.api.TransientStore;
+import io.cdap.wrangler.api.TransientVariableScope;
+import io.cdap.wrangler.api.parser.ByteSize;
+import io.cdap.wrangler.api.parser.ColumnName;
+import io.cdap.wrangler.api.parser.Text;
+import io.cdap.wrangler.api.parser.TimeDuration;
+import io.cdap.wrangler.api.parser.TokenType;
+import io.cdap.wrangler.api.parser.UsageDefinition;
 
 import java.util.Collections;
 import java.util.List;
-
+ 
 /**
  * Directive to aggregate byte size and time duration.
+ * <p>
+ * This directive accumulates source column values (as ByteSize and TimeDuration),
+ * computes either a total or average, converts to specified units, and outputs the result.
+ * </p>
  */
 public class AggregateSizeAndTime implements Directive {
     public static final String STORE_KEY_TOTAL_SIZE = "agg.total.size";
@@ -54,12 +69,13 @@ public class AggregateSizeAndTime implements Directive {
     }
 
     @Override
-    public void initialize(Arguments arguments) throws DirectiveParseException {
+    public void initialize(io.cdap.wrangler.api.Arguments arguments)
+        throws DirectiveParseException {
         inputSizeCol = ((ColumnName) arguments.value("inputSizeCol")).value();
         inputTimeCol = ((ColumnName) arguments.value("inputTimeCol")).value();
         outputSizeCol = ((ColumnName) arguments.value("outputSizeCol")).value();
         outputTimeCol = ((ColumnName) arguments.value("outputTimeCol")).value();
-
+ 
         if (arguments.contains("sizeUnit")) {
             sizeUnit = ((Text) arguments.value("sizeUnit")).value();
         }
@@ -72,12 +88,12 @@ public class AggregateSizeAndTime implements Directive {
     }
 
     @Override
-    public List<Row> execute(List<Row> rows, ExecutorContext context) throws DirectiveExecutionException {
+    public List<Row> execute(List<Row> rows, ExecutorContext context)
+        throws DirectiveExecutionException {
         TransientStore store = context.getTransientStore();
         Boolean isFinalized = store.get(STORE_KEY_IS_FINALIZED);
 
         if (isFinalized != null && isFinalized) {
-            // If we have already finalized, return an empty list
             return Collections.emptyList();
         }
 
@@ -95,28 +111,24 @@ public class AggregateSizeAndTime implements Directive {
             rowCount = 0L;
         }
 
-        // If this is the last batch of rows, finalize the aggregation
+        // Finalize aggregation when receiving an empty batch.
         if (rows.isEmpty()) {
             if ("average".equalsIgnoreCase(aggregationType) && rowCount > 0) {
                 totalSize /= rowCount;
                 totalTime /= rowCount;
             }
-
-            // Convert to the specified units
             double convertedSize = convertBytesTo(totalSize, sizeUnit);
             double convertedTime = convertMillisecondsTo(totalTime, timeUnit);
-
+ 
             Row result = new Row();
             result.add(outputSizeCol, convertedSize);
             result.add(outputTimeCol, convertedTime);
-
-            // Mark as finalized
+ 
             store.set(TransientVariableScope.GLOBAL, STORE_KEY_IS_FINALIZED, true);
-
             return Collections.singletonList(result);
         }
 
-        // Process the current batch of rows
+        // Process each row.
         for (Row row : rows) {
             Object sizeObj = row.getValue(inputSizeCol);
             Object timeObj = row.getValue(inputTimeCol);
@@ -137,11 +149,9 @@ public class AggregateSizeAndTime implements Directive {
             }
         }
 
-        // Store the updated values back in the transient store
         store.set(TransientVariableScope.GLOBAL, STORE_KEY_TOTAL_SIZE, totalSize);
         store.set(TransientVariableScope.GLOBAL, STORE_KEY_TOTAL_TIME, totalTime);
         store.set(TransientVariableScope.GLOBAL, STORE_KEY_ROW_COUNT, rowCount);
-
         return rows;
     }
 
@@ -190,6 +200,6 @@ public class AggregateSizeAndTime implements Directive {
 
     @Override
     public void destroy() {
-        // Nothing to clean
+        // No cleanup necessary.
     }
 }
