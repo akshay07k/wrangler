@@ -1,0 +1,115 @@
+This file contains prompts used with an AI tool to complete the ByteSize & TimeDuration Wrangler enhancement project. Prompts were designed using the following best practices:
+- Clear and specific instructions
+- Breaking down complex tasks into subtasks
+- Asking AI to think through edge cases
+- Requesting test cases and validation
+
+----------
+
+# Prompt 1
+Assignment: Enhance Wrangler with Byte Size and Time Duration Units Parsers.
+Background:
+The CDAP Wrangler library currently parses various data types but lacks built-in support for handling units such as Kilobytes (KB), Megabytes (MB), milliseconds (ms), or seconds (s). Users often need to perform calculations or conversions on columns representing data sizes or time intervals.
+Objectives:
+- Integrate new lexer tokens (BYTE_SIZE, TIME_DURATION) into the Wrangler grammar.
+- Update the relevant Java code (wrangler-api, wrangler-core) to handle these new token types.
+- Implement a new aggregate directive (aggregate-stats) that utilizes these new types.
+- Develop comprehensive test cases including scenarios for aggregating these units.
+Tasks:
+- Fork the repository: https://github.com/data-integrations/wrangler.
+- Update the grammar: Add new lexer rules and modify parser rules.
+- API updates: Create ByteSize.java and TimeDuration.java (extending Token).
+- Core updates: Enhance the parser visitor methods and aggregate directive logic.
+- Testing: Provide comprehensive tests for token parsing and directive aggregation.
+Deliverables:
+- Modified grammar and source files.
+- Updated test cases.
+
+
+# Prompt 2
+Please outline what to do from the beginning.
+
+# Prompt 3
+Now, provide a detailed, step-by-step explanation of each task of the project. Think through each part carefully.
+
+# Prompt 4
+"(a) Grammar Modification (located in wrangler-core/src/main/antlr4/.../Directives.g4):
+- Add lexer rules for BYTE_SIZE and TIME_DURATION (including helper fragments BYTE_UNIT and TIME_UNIT).
+- Modify the relevant parser rules (e.g., 'value', or create new specific rules like 'byteSizeArg' and 'timeDurationArg') to accept BYTE_SIZE and TIME_DURATION tokens as directive arguments.
+- Regenerate the ANTLR Java parser/lexer code using the appropriate build process (e.g., mvn compile)."
+
+# Prompt 5
+Review the code and think about any possible edge cases or failure points and suggest improvements if needed.
+
+# Prompt 6
+"(b) API Updates (wrangler-api module):
+- Create new Java classes, ByteSize.java and TimeDuration.java, extending the Token interface in wrangler-api/src/main/java/io/cdap/wrangler/api/parser/Token.java.
+  - These classes must parse the token string (e.g., '10KB', '150ms') in their constructor.
+  - Provide methods to retrieve the value in a canonical unit (e.g., long getBytes() for ByteSize).
+- Add BYTE_SIZE and TIME_DURATION to the TokenType enum.
+- Update both the usage definition and token definition so that these new token types are accepted as valid directive arguments."
+
+# Prompt 7
+Review all changes made so far. Have I completed the API updates properly,
+ including adding the new token types and their usage in directive arguments?
+
+# Prompt 8
+Explain in brief what is meant by “update both the usage definition and token definition so that these new token types are accepted as valid directive arguments.”
+
+# Prompt 9
+(c) Core Parser Updates (wrangler-core module):
+○ Modify by adding visit methods for the parser rules created/modified in step 3a (e.g., visitByteSizeArg, visitTimeDurationArg, or modifying visitValue ifapplicable).
+○ Hint : chk ctx.getText().
+○ Add the created token instances to the TokenGroup.
+
+Think about all the edge cases and share the code accordingly.
+
+
+# Prompt 10
+(d) New Directive Implementation (wrangler-core module):
+○ Create a new directive class, which can do aggregation, implementing the
+Directive interface
+○ UsageDefinition (define()): The directive should accept at least four arguments:
+1. ColumnName (source column with byte sizes).
+2. ColumnName (source column with time durations).
+3. ColumnName (target column name for total size).
+4. ColumnName (target column name for total or average time).
+Optionally, add arguments to specify output units (e.g., 'MB', 'GB',
+'seconds', 'minutes') or aggregation type (total, average).
+○ Initialization : Store the source and target column names provided in the
+arguments.
+○ Execution :
+■ This directive should operate as an aggregate. So you need a store to
+accumulate totals. Think about it. Hint : Chk ExecutorContext
+■ For each row:
+■ Read the byte size value from the source size column.
+■ Read the time duration value from the source time column.
+■ Add these values (converted to canonical units like bytes and
+nanoseconds) to running totals stored in the Store.
+■ Finalization : This method (if using RecipePipeline's aggregation
+capabilities) or logic within the last execute call needs to:
+■ Retrieve the final totals from the Store.
+
+■ Perform unit conversions if required by arguments (e.g., convert total
+bytes to MB, total nanoseconds to seconds).
+
+■ Return a single new Row containing the target columns with the
+calculated aggregate values (e.g., total_size_mb, total_time_sec).
+
+Implement a new aggregation directive in the wrangler-core module that performs aggregation as follow the above points.
+
+# Prompt 11
+Moving to testing part
+Write unit tests for ByteSize and TimeDuration to verify that they 
+correctly parse inputs such as "10kb", "1.5MB", "5ms", and "2.1s" and return canonical values.
+
+# Prompt 12
+Develop parser tests (using files like GrammarBasedParserTest.java or 
+RecipeCompilerTest.java) to ensure that recipes using the new syntax are parsed correctly and that invalid syntax is rejected.
+
+# Prompt 13
+Create comprehensive unit tests for the new aggregation directive 
+(for example, using TestingRig.execute(recipe, rows) with a sample recipe)
+ and assert that the output contains a single row with the correctly 
+ calculated aggregate values (e.g., total size in MB, total time in seconds).
+
