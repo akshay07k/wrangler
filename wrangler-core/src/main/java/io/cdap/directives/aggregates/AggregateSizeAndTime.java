@@ -16,6 +16,9 @@
 
 package io.cdap.directives.aggregates;
 
+import io.cdap.cdap.api.annotation.Description;
+import io.cdap.cdap.api.annotation.Name;
+import io.cdap.cdap.api.annotation.Plugin;
 import io.cdap.wrangler.api.Directive;
 import io.cdap.wrangler.api.DirectiveExecutionException;
 import io.cdap.wrangler.api.DirectiveParseException;
@@ -33,14 +36,20 @@ import io.cdap.wrangler.api.parser.UsageDefinition;
 
 import java.util.Collections;
 import java.util.List;
- 
+
 /**
  * Directive to aggregate byte size and time duration.
  * <p>
- * This directive accumulates source column values (as ByteSize and TimeDuration),
- * computes either a total or average, converts to specified units, and outputs the result.
+ * This directive accumulates source column values (as ByteSize and
+ * TimeDuration),
+ * computes either a total or average, converts to specified units, and outputs
+ * the result.
  * </p>
  */
+
+@Plugin(type = Directive.TYPE)
+@Name("AggregateSizeAndTime")
+@Description("Aggregates byte size and time duration columns, and returns total or average values.")
 public class AggregateSizeAndTime implements Directive {
     public static final String STORE_KEY_TOTAL_SIZE = "agg.total.size";
     public static final String STORE_KEY_TOTAL_TIME = "agg.total.time";
@@ -70,12 +79,12 @@ public class AggregateSizeAndTime implements Directive {
 
     @Override
     public void initialize(io.cdap.wrangler.api.Arguments arguments)
-        throws DirectiveParseException {
+            throws DirectiveParseException {
         inputSizeCol = ((ColumnName) arguments.value("inputSizeCol")).value();
         inputTimeCol = ((ColumnName) arguments.value("inputTimeCol")).value();
         outputSizeCol = ((ColumnName) arguments.value("outputSizeCol")).value();
         outputTimeCol = ((ColumnName) arguments.value("outputTimeCol")).value();
- 
+
         if (arguments.contains("sizeUnit")) {
             sizeUnit = ((Text) arguments.value("sizeUnit")).value();
         }
@@ -89,7 +98,7 @@ public class AggregateSizeAndTime implements Directive {
 
     @Override
     public List<Row> execute(List<Row> rows, ExecutorContext context)
-        throws DirectiveExecutionException {
+            throws DirectiveExecutionException {
         TransientStore store = context.getTransientStore();
         Boolean isFinalized = store.get(STORE_KEY_IS_FINALIZED);
 
@@ -119,11 +128,11 @@ public class AggregateSizeAndTime implements Directive {
             }
             double convertedSize = convertBytesTo(totalSize, sizeUnit);
             double convertedTime = convertMillisecondsTo(totalTime, timeUnit);
- 
+
             Row result = new Row();
             result.add(outputSizeCol, convertedSize);
             result.add(outputTimeCol, convertedTime);
- 
+
             store.set(TransientVariableScope.GLOBAL, STORE_KEY_IS_FINALIZED, true);
             return Collections.singletonList(result);
         }
